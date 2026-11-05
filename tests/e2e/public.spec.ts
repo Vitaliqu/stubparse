@@ -1,6 +1,11 @@
 // Public pages and API guards. No accounts or secrets needed; runs on every CI build.
+// The two sign-in tests also need the public Firebase web config and skip without it.
 
 import { expect, test } from "@playwright/test";
+
+// Sign-in UI and the /app redirect need the public Firebase web config; without it the app shows "not configured".
+const firebaseConfigured = !!(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+const needsFirebase = "Set the NEXT_PUBLIC_FIREBASE_* variables (CI: repository secrets) to run this test.";
 
 test("landing page shows the offer and the sample demo", async ({ page }) => {
   await page.goto("/");
@@ -28,6 +33,7 @@ test("pricing toggles between monthly and yearly", async ({ page }) => {
 });
 
 test("sign-up offers every sign-in method", async ({ page }) => {
+  test.skip(!firebaseConfigured, needsFirebase);
   await page.goto("/sign-up");
   await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Continue with Apple" })).toBeVisible();
@@ -36,6 +42,7 @@ test("sign-up offers every sign-in method", async ({ page }) => {
 });
 
 test("signed-out visitors are sent to sign-in from the app, keeping the destination", async ({ page }) => {
+  test.skip(!firebaseConfigured, needsFirebase);
   await page.goto("/app/history");
   await expect(page).toHaveURL(/\/sign-in\?next=%2Fapp%2Fhistory/);
 });
