@@ -6,12 +6,11 @@ import { USE_CASE_PAGES } from "@/lib/seo/use-cases";
 import { GLOSSARY } from "@/lib/seo/glossary";
 import { TOOLS } from "@/lib/seo/calculators";
 
-// Bump when content in a section changes, so crawlers see a real lastModified.
-const UPDATED = new Date("2026-11-04");
-
+// No lastModified: an identical date on every URL teaches Google to ignore the field.
+// Add per-page dates here only when they reflect real content changes.
 export default function sitemap(): MetadataRoute.Sitemap {
   const page = (path: string, priority: number, changeFrequency: "weekly" | "monthly" | "yearly" = "monthly") =>
-    ({ url: `${BASE_URL}${path}`, lastModified: UPDATED, changeFrequency, priority });
+    ({ url: `${BASE_URL}${path}`, changeFrequency, priority });
   return [
     page("", 1, "weekly"),
     page("/pricing", 0.9),

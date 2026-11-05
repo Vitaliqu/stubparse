@@ -58,7 +58,7 @@ export const calculatorLd = (name: string, description: string, path: string) =>
 export const siteGraphLd = (description: string) => ({
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "Organization", "@id": `${BASE_URL}/#org`, name: SITE_NAME, url: BASE_URL, logo: abs("/icon.svg") },
+    { "@type": "Organization", "@id": `${BASE_URL}/#org`, name: SITE_NAME, url: BASE_URL, logo: { "@type": "ImageObject", url: abs("/logo.png"), width: 512, height: 512 } },
     { "@type": "WebSite", "@id": `${BASE_URL}/#site`, name: SITE_NAME, url: BASE_URL, publisher: { "@id": `${BASE_URL}/#org` } },
     {
       "@type": "SoftwareApplication",

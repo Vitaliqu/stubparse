@@ -5,7 +5,7 @@ function Mark({ className = "size-6" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>
       <path
-        d="M5 2.5h14a1.5 1.5 0 0 1 1.5 1.5v16.2l-1.75-1.2-1.75 1.2-1.75-1.2-1.75 1.2-1.75-1.2-1.75 1.2-1.75-1.2-1.75 1.2V4A1.5 1.5 0 0 1 5 2.5Z"
+        d="M5 2.5H19Q20.5 2.5 20.5 4V20.2L18.375 19L16.25 20.2L14.125 19L12 20.2L9.875 19L7.75 20.2L5.625 19L3.5 20.2V4Q3.5 2.5 5 2.5Z"
         fill="#0b0b0c"
       />
       <rect x="6.5" y="9.5" width="11" height="3" rx="0.6" fill="#ffe24a" />
