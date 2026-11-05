@@ -1,283 +1,226 @@
-# StubParse
+<div align="center">
 
-Free paystub parser. Upload any paystub PDF or image, extract structured payroll data, and export to Excel, CSV, or JSON. No account required.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.png">
+  <img alt="StubParse. Paystubs in. Spreadsheets out." src=".github/assets/banner-light.png" width="100%">
+</picture>
 
-Live at [stubparse.com](https://stubparse.com)
+<br>
 
----
+**Turn paystub PDFs and photos into clean Excel, CSV, or JSON, with every number checked.**<br>
+Open source, private by design, and ready to deploy on Vercel's free plan.
 
-## What It Does
+<br>
 
-StubParse takes paystub files (PDF or image) and extracts structured payroll data from them — employee name, pay period, check date, gross pay, net pay, earnings breakdown, taxes, deductions, YTD amounts, and more.
+[![CI](https://github.com/Vitaliqu/stubparse/actions/workflows/ci.yml/badge.svg)](https://github.com/Vitaliqu/stubparse/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0b0b0c)](LICENSE)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-0b0b0c?logo=nextdotjs)](https://nextjs.org)
+[![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](tsconfig.json)
+[![Claude](https://img.shields.io/badge/AI-Claude-d97757?logo=anthropic&logoColor=white)](https://www.anthropic.com/claude)
 
-It supports two parsing modes:
+[**Live app**](https://stubparse.com) &nbsp;·&nbsp; [Architecture](docs/ARCHITECTURE.md) &nbsp;·&nbsp; [REST API](https://stubparse.com/docs/api) &nbsp;·&nbsp; [Self-host](#quick-start) &nbsp;·&nbsp; [Contributing](CONTRIBUTING.md)
 
-- **Basic mode** — runs entirely in the browser using PDF.js and Tesseract.js. No files are sent anywhere.
-- **AI mode** — uploads the file to a Python backend that uses PyMuPDF or Tesseract for text extraction, then passes the content to Claude (Anthropic) for deep field recognition. Files are processed and immediately discarded — nothing is stored.
+</div>
 
-After parsing, results are editable in the UI. You can correct any field before exporting. Export formats include:
+<br>
 
-- **XLSX** — styled Excel spreadsheet, horizontal (one row per employee, periods as columns) or vertical (one row per period, fields as columns)
-- **CSV** — flat or pivoted, universal compatibility
-- **JSON** — structured array for developers
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/showcase-dark.png">
+  <img alt="The StubParse workspace on desktop and mobile: an extracted paystub with three passing math checks, AI-read values highlighted, and the export panel." src=".github/assets/showcase-light.png" width="100%">
+</picture>
 
----
+## Why StubParse
 
-## Architecture
+Bookkeepers re-type paystubs every pay cycle. Loan officers and landlords check income across a stack of them. Everyone ends up copying numbers by hand, and nobody can be sure those numbers add up.
 
+StubParse reads the stub, **proves the arithmetic**, and gives you a spreadsheet:
+
+- **Your file never leaves the browser.** PDF.js and Tesseract run on your device. AI mode sends only the extracted text, or downscaled page images when a scan has no text. Nothing is stored unless you turn on history.
+- **Every number is checked.** Earnings must add up to gross, gross minus taxes and deductions must equal net, and year-to-date must be at least the current amount. A stub that doesn't balance says so before you export.
+- **What the AI read is visible.** Values Claude extracted are highlighted like a marker on paper. Anything you edit turns plain, so you always know what was read and what was typed.
+- **Built for batches.** Drop a stack of stubs, fix what needs fixing, and export one sheet: one row per stub, or one row per employee with pay periods side by side.
+
+## Features
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### Extraction
+- **Two modes:** a rule-based parser that runs entirely in the browser, or Claude for unusual layouts and scans
+- Multi-page PDFs, photos, and scans (PDF, PNG, JPG, WEBP, BMP, TIFF)
+- Handles Gusto, ADP, Paychex, QuickBooks, Square, and generic formats
+- Earnings, taxes, and deductions found dynamically, not from a fixed template
+
+</td>
+<td width="50%" valign="top">
+
+### Verification
+- Three live math checks on every stub
+- **Integrity signals:** files saved by editing tools, mixed fonts in amounts, impossible dates, out-of-range tax rates, and YTD jumps between stubs
+- Income report: pay frequency, averages, and annualized income across a set of stubs
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### Product
+- Firebase Auth: Google, Apple, email + password, magic link
+- Stripe subscriptions: Free (3 docs), Pro, Business, monthly or yearly
+- Saved history with labels and a retention period you choose
+- **Teams:** 5 seats, invite links, shared history
+- REST API with hashed keys for Business
+
+</td>
+<td valign="top">
+
+### Platform
+- Programmatic SEO: provider, format, use-case, and glossary pages, free calculators, JSON-LD, per-page OG images, `llms.txt`
+- Lifecycle email (Resend), product analytics (PostHog), error tracking (Sentry)
+- Vercel Cron for email and retention cleanup
+- Internal admin console with an audit log
+
+</td>
+</tr>
+</table>
+
+## How it works
+
+```mermaid
+flowchart LR
+    F["PDF or photo"] --> X{"Text layer?"}
+
+    subgraph B ["Browser"]
+        X -- "yes" --> T["PDF.js text"]
+        X -- "no" --> O["Tesseract OCR<br/>+ page images"]
+        T --> M{"Mode"}
+        O --> M
+        M -- "Basic" --> R["Regex parser"]
+        V["Math checks<br/>+ integrity signals"] --> E["Review and edit"]
+    end
+
+    subgraph S ["Server · Vercel"]
+        A["/api/ai-parse<br/>verify token · reserve quota"] --> C["Claude<br/>structured extraction"]
+        C -- "failure: refund" --> A
+    end
+
+    M -- "AI: text or images only" --> A
+    C --> V
+    R --> V
+    E --> XL["XLSX · CSV · JSON"]
 ```
-stubparse/
-├── frontend/                  # Next.js 16 app
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── page.tsx       # Main UI — upload, parse, results, export
-│   │   │   ├── layout.tsx     # HTML shell, metadata, JSON-LD
-│   │   │   ├── globals.css    # Tailwind base styles
-│   │   │   └── api/
-│   │   │       ├── parse/     # Server-side route: basic parsing (no AI)
-│   │   │       ├── export/    # Server-side route: XLSX / CSV / JSON generation
-│   │   │       └── backend/   # Proxy routes to Python backend (hides API secret)
-│   │   │           ├── jobs/  # POST proxy → backend /jobs
-│   │   │           └── stream/[jobId]/  # GET proxy → backend /stream/{id}
-│   │   ├── components/
-│   │   │   ├── UploadSection.tsx   # File input, drag-and-drop, AI toggle
-│   │   │   ├── ResultsSection.tsx  # Parsed paystub cards
-│   │   │   ├── PaystubCard.tsx     # Single result card with editable fields
-│   │   │   ├── ExportPanel.tsx     # Format/layout selector, field picker, download
-│   │   │   ├── icons.tsx           # SVG icon components
-│   │   │   └── ui.tsx              # Shared UI primitives (checkbox, badge, etc.)
-│   │   ├── lib/
-│   │   │   ├── pdf-extractor.ts    # Browser-side PDF text extraction via PDF.js
-│   │   │   ├── image-ocr.ts        # Browser-side OCR via Tesseract.js
-│   │   │   ├── regex-parser.ts     # Rule-based field extraction from raw text
-│   │   │   ├── dynamic-extractor.ts # Pattern matching for earnings/taxes/deductions
-│   │   │   ├── field-definitions.ts # Export field groups and keys
-│   │   │   └── file-utils.ts       # File type helpers
-│   │   └── types/
-│   │       └── paystub.ts          # PaystubData, FileResult, ExportFormat types
-│   ├── public/
-│   │   └── pdf.worker.min.mjs     # PDF.js worker (served locally, no CDN)
-│   ├── next.config.ts
-│   └── package.json
-│
-├── backend/                   # Python FastAPI server (AI mode)
-│   ├── parser/
-│   │   ├── extractor.py       # Main extraction engine — PDF/image → structured data
-│   │   ├── ai_engine.py       # Claude API integration (text + vision fallback)
-│   │   ├── image_processor.py # Image preprocessing for OCR
-│   │   └── models.py          # Pydantic models for parsed results
-│   ├── server.py              # FastAPI app — endpoints, auth, rate limiting, CORS
-│   ├── requirements.txt
-│   ├── nixpacks.toml          # Railway deployment config (installs tesseract)
-│   └── .env.example
-│
-├── setup.sh                   # Installs Python deps + frontend Node deps
-├── start.sh                   # Starts backend or frontend
-└── README.md
-```
 
----
+Billing, teams, and metering are covered in **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## How Parsing Works
+## Engineering highlights
 
-### Basic mode (browser-only)
+The parts that were hardest to get right.
 
-1. The user drops a PDF or image file.
-2. If it's a PDF, **PDF.js** extracts the text layer. If the PDF has no text (scanned), **Tesseract.js** runs OCR on the rendered page image.
-3. The raw text is passed through `regex-parser.ts` which uses regular expressions to find known field patterns (gross pay, net pay, check date, pay period, etc.).
-4. `dynamic-extractor.ts` scans line by line for earnings, taxes, and deductions using section headers and amount patterns.
-5. Results are displayed and editable immediately — no network request was made.
+| | |
+|---|---|
+| **Billing that self-heals** | Webhooks are deduplicated by event id, then the server **re-reads the customer's subscriptions from Stripe** rather than trusting the payload. Retries, out-of-order delivery, or a missed webhook can't leave a paying user on Free. |
+| **Metering that can't be raced** | AI usage is reserved atomically in a Firestore transaction *before* Claude is called and refunded if extraction fails. Parallel requests can't overspend a plan, and the daily limits hold across every serverless instance. |
+| **Privacy as architecture** | Text extraction and OCR run in the browser. The server sees text, or downscaled images when there is no text. Sentry strips request bodies and AI payloads, and PostHog masks all text. |
+| **Locked-down by default** | A strict CSP (an end-to-end test fails on any violation), HSTS, Firebase App Check, Firestore rules that check the plan, API keys stored only as SHA-256 hashes, HMAC-signed unsubscribe links, and 0 known production vulnerabilities. |
+| **SEO as a system** | Data-driven pages, hub pages, breadcrumbs, JSON-LD, and generated OG images. A crawler script checks every sitemap URL for canonicals, structured data, and broken links in CI. |
+| **Tested end to end** | Vitest unit tests for the math, income, integrity, billing, and team logic. Playwright runs against the production build, and an optional journey test signs up, parses a stub, and pays with Stripe test mode. A field-accuracy benchmark guards the parser. |
 
-### AI mode (backend)
+## Tech stack
 
-1. The user enables the "Claude AI" toggle and clicks Parse.
-2. The browser POSTs the file to `/api/backend/jobs` (a Next.js server-side proxy route).
-3. The proxy adds the `X-API-Secret` header and forwards the request to the Python backend at `POST /jobs`.
-4. The backend creates a job ID and starts processing in a thread pool:
-   - **PyMuPDF** extracts the text layer from PDFs.
-   - If the file is an image (or the PDF has no text), **pytesseract** runs OCR.
-   - If OCR also returns nothing (e.g. a low-quality scan), the backend falls back to **Claude vision** — the image is base64-encoded and sent directly to the Claude API for visual extraction.
-   - The extracted text is then sent to **Claude Haiku** with a structured prompt that extracts all payroll fields into a typed JSON schema.
-5. Results stream back to the browser in real time via **Server-Sent Events** (SSE) through `/api/backend/stream/[jobId]`.
-6. The frontend updates the UI progressively as events arrive.
+| Layer | Choice |
+|---|---|
+| Framework | [Next.js 16](https://nextjs.org) App Router, React 19, TypeScript (strict) |
+| Styling | Tailwind CSS 4, Geist, a documented design system ([DESIGN.md](DESIGN.md)) |
+| Parsing | [PDF.js](https://mozilla.github.io/pdf.js/), [Tesseract.js](https://tesseract.projectnaptha.com/), [Claude](https://www.anthropic.com/claude) via `@anthropic-ai/sdk` |
+| Auth & data | Firebase Authentication, Cloud Firestore, App Check |
+| Payments | Stripe Checkout, Customer Portal, webhooks |
+| Ops | Vercel (Cron, serverless), Sentry, PostHog, Resend, Upstash rate limiting |
+| Quality | Vitest, Playwright, ESLint, GitHub Actions |
 
-### Export
+## Quick start
 
-Export runs entirely server-side in the Next.js API route `/api/export`:
-- **XLSX**: Built with ExcelJS. Horizontal layout pivots by pay period (one row per employee, date groups as column headers). Vertical layout puts one row per paystub, fields as columns.
-- **CSV**: Same logic, plain text output.
-- **JSON**: Nested by employee → pay periods.
-- YTD columns are only included for fields that actually have YTD data.
-
----
-
-## Running Locally
-
-### Prerequisites
-
-- Node.js 18+
-- Python 3.10+
-- `tesseract` system binary (only needed for AI mode with image files)
-  - macOS: `brew install tesseract`
-  - Ubuntu: `sudo apt install tesseract-ocr`
-
-### Basic mode only (no AI, no Python)
+**Requirements:** Node 20+, plus a Firebase project, a Stripe account (test mode is fine), and an Anthropic API key.
 
 ```bash
-cd frontend
+git clone https://github.com/Vitaliqu/stubparse.git
+cd stubparse
 npm install
-cp .env.example .env
-npm run dev
+cp .env.example .env    # fill in Firebase, Stripe, and Anthropic
+npm run dev             # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Basic parsing works immediately with no API key or backend.
+Basic mode needs only the Firebase variables. AI mode needs `ANTHROPIC_API_KEY`, and paid plans need the Stripe variables. Every optional service (Sentry, PostHog, Resend, Upstash) turns off cleanly when its key is missing.
 
-### Full stack (with AI mode)
+**Deploy your own:**
 
-**1. Install all dependencies**
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FVitaliqu%2Fstubparse&env=NEXT_PUBLIC_FIREBASE_API_KEY,NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,NEXT_PUBLIC_FIREBASE_PROJECT_ID,NEXT_PUBLIC_FIREBASE_APP_ID,FIREBASE_PROJECT_ID,FIREBASE_CLIENT_EMAIL,FIREBASE_PRIVATE_KEY,ANTHROPIC_API_KEY&envDescription=Firebase%20and%20Anthropic%20keys.%20See%20.env.example%20for%20the%20rest.&envLink=https%3A%2F%2Fgithub.com%2FVitaliqu%2Fstubparse%2Fblob%2Fmain%2F.env.example)
+
+Then deploy the Firestore rules (`npm run deploy:rules`) and follow **[LAUNCH.md](LAUNCH.md)** for Stripe, domains, and email.
+
+## REST API
+
+Business accounts can parse stubs from their own systems:
 
 ```bash
-./setup.sh
+curl https://stubparse.com/api/v1/parse \
+  -H "Authorization: Bearer $STUBPARSE_KEY" \
+  -F "file=@paystub.pdf"
 ```
 
-This creates a `.venv` in the project root and installs both Python and Node dependencies.
+The response holds the structured fields, the three math checks, and the integrity signals. Full reference: **[stubparse.com/docs/api](https://stubparse.com/docs/api)**.
 
-**2. Configure environment variables**
+## Scripts
 
-```bash
-# Backend
-cp backend/.env.example backend/.env
-```
-
-Edit `backend/.env`:
-
-```env
-ANTHROPIC_API_KEY=sk-ant-...        # Required for AI parsing
-API_SECRET=your-random-secret       # Shared secret between frontend and backend
-ALLOWED_ORIGIN=http://localhost:3000 # CORS allowed origin
-```
-
-```bash
-# Frontend
-cp frontend/.env.example frontend/.env
-```
-
-Edit `frontend/.env`:
-
-```env
-BACKEND_URL=http://localhost:8000   # Python backend URL (server-side only)
-API_SECRET=your-random-secret       # Must match backend API_SECRET
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-```
-
-**3. Start both servers**
-
-```bash
-# Terminal 1 — Python backend
-./start.sh backend
-# Starts uvicorn at http://localhost:8000
-
-# Terminal 2 — Next.js frontend
-./start.sh frontend
-# Starts Next.js at http://localhost:3000
-```
-
-**4. Use AI mode**
-
-Open [http://localhost:3000](http://localhost:3000), upload a paystub, enable the **Claude AI** toggle, and click Parse.
-
----
-
-## Deploying
-
-### Frontend — Vercel
-
-1. Push the repo to GitHub.
-2. Import the project in Vercel. Set the root directory to `frontend`.
-3. Add environment variables in the Vercel dashboard:
-
-| Variable | Value |
+| Command | What it does |
 |---|---|
-| `BACKEND_URL` | Your Railway/Render backend URL |
-| `API_SECRET` | Same secret as backend |
-| `NEXT_PUBLIC_BASE_URL` | Your Vercel deployment URL |
+| `npm run dev` | Start the dev server |
+| `npm test` | Unit tests: math checks, income, integrity, billing, teams, calculators |
+| `npm run bench` | Field-accuracy benchmark on `bench/fixtures` (`BENCH_AI=1` adds AI mode) |
+| `npm run test:e2e` | Playwright against the production build |
+| `npm run lint` · `npm run typecheck` | Static checks |
+| `npm run build` | Production build |
 
-### Backend — Railway
+Local Stripe webhooks, Firestore rules and indexes, and the journey test are covered in **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
 
-1. Create a new Railway project, connect the repo, set the root directory to `backend`.
-2. Railway auto-detects Python via `nixpacks.toml` (which installs the `tesseract` system package).
-3. Set the start command to:
-   ```
-   uvicorn server:app --host 0.0.0.0 --port $PORT
-   ```
-4. Add environment variables in Railway:
+## More screenshots
 
-| Variable | Value |
+<table>
+<tr>
+<td width="33%"><img src=".github/assets/pricing.png" alt="Pricing page with Free, Pro, and Business plans"></td>
+<td width="33%"><img src=".github/assets/tools.png" alt="Free paystub checker calculator"></td>
+<td width="33%"><img src=".github/assets/account.png" alt="Account page with plan, preferences, and team"></td>
+</tr>
+<tr>
+<td align="center"><sub>Pricing</sub></td>
+<td align="center"><sub>Free calculators</sub></td>
+<td align="center"><sub>Account and team</sub></td>
+</tr>
+</table>
+
+<sub>All data in screenshots is fictional.</sub>
+
+## Documentation
+
+| | |
 |---|---|
-| `ANTHROPIC_API_KEY` | Your Anthropic key |
-| `API_SECRET` | Same secret as frontend |
-| `ALLOWED_ORIGIN` | Your Vercel frontend URL |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Source layout, data model, billing, teams, metering, retention |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, tests, Stripe CLI, Firestore rules |
+| [docs/SEO.md](docs/SEO.md) | The programmatic SEO system and how to add pages |
+| [LAUNCH.md](LAUNCH.md) | Production checklist |
+| [SECURITY.md](SECURITY.md) | Security model, privacy design, reporting a vulnerability |
+| [PRODUCT.md](PRODUCT.md) · [DESIGN.md](DESIGN.md) | Product principles and the design system |
 
-### Backend — Other hosts (Render, Fly.io, VPS)
+## Contributing
 
-Any Python host works. Requirements:
-- Python 3.10+
-- `tesseract` system package installed
-- Environment variables above
-- Start command: `uvicorn server:app --host 0.0.0.0 --port $PORT`
-
----
-
-## Environment Variables Reference
-
-### `frontend/.env`
-
-| Variable | Description |
-|---|---|
-| `BACKEND_URL` | Python backend URL — server-side only, never exposed to the browser |
-| `API_SECRET` | Shared secret added to all proxy requests to the backend |
-| `NEXT_PUBLIC_BASE_URL` | Public site URL used for OG tags and canonical links |
-
-### `backend/.env`
-
-| Variable | Description |
-|---|---|
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude Haiku |
-| `API_SECRET` | All requests must include `X-API-Secret: <value>` or get a 401 |
-| `ALLOWED_ORIGIN` | CORS allowed origin (your frontend URL) |
-
----
-
-## Security
-
-- The browser never talks directly to the Python backend. All requests go through Next.js server-side proxy routes that inject the `X-API-Secret` header.
-- The backend rejects any request missing or with a wrong `X-API-Secret`.
-- CORS is restricted to `ALLOWED_ORIGIN`.
-- File uploads are validated by magic bytes (not just extension) and capped at 20 MB.
-- Rate limiting: 20 requests/minute per IP on `/jobs` and `/parse`.
-- API docs (`/docs`, `/redoc`) are disabled in production.
-- Uploaded files are never written to disk — processed in memory and discarded.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend framework | Next.js 16, React 19, TypeScript |
-| Styling | Tailwind CSS 4 |
-| PDF extraction (browser) | PDF.js |
-| OCR (browser) | Tesseract.js |
-| PDF extraction (backend) | PyMuPDF (fitz) |
-| OCR (backend) | pytesseract + Pillow |
-| AI extraction | Anthropic Claude Haiku 4.5 |
-| Backend framework | FastAPI + uvicorn |
-| Rate limiting | slowapi |
-| Excel export | ExcelJS |
-| Deployment | Vercel (frontend) + Railway (backend) |
-
----
+Issues and pull requests are welcome. Read **[CONTRIBUTING.md](CONTRIBUTING.md)** first. The most useful contribution is a parser fix for a layout StubParse gets wrong, together with a synthetic benchmark fixture that proves it.
 
 ## License
 
-MIT
+[MIT](LICENSE). Use it, fork it, ship it.
+
+<br>
+
+<div align="center">
+<sub>Built with Next.js, Firebase, Stripe, and Claude. If StubParse saved you some typing, a ⭐ helps others find it.</sub>
+</div>
