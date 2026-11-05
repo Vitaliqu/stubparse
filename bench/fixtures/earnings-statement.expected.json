@@ -1,0 +1,14 @@
+{
+  "name": "Maya Okafor",
+  "payPeriodStart": "2026-10-01",
+  "payPeriodEnd": "2026-10-15",
+  "checkDate": "2026-10-20",
+  "grossPay": "2319.40",
+  "netPay": "1614.78",
+  "fields": {
+    "Federal Income Tax": "231.94",
+    "Social Security Tax": "143.80",
+    "Medicare Tax": "33.63",
+    "401(k)": "115.97"
+  }
+}

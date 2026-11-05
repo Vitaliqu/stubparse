@@ -1,0 +1,14 @@
+{
+  "name": "Priya Nair",
+  "payPeriodStart": "2026-10-25",
+  "payPeriodEnd": "2026-11-07",
+  "checkDate": "2026-11-07",
+  "grossPay": "1498.13",
+  "netPay": "1232.11",
+  "fields": {
+    "Federal Withholding": "98.12",
+    "Social Security": "92.88",
+    "Medicare": "21.72",
+    "Uniform": "12.00"
+  }
+}

@@ -1,0 +1,22 @@
+Harbor & Pine Bakery LLC
+418 Alder St, Sacramento, CA 95814
+Earnings Statement
+Employee Name: Maya Okafor
+Employee ID: E-20417
+Period Beginning: 10/01/2026
+Period Ending: 10/15/2026
+Pay Date: 10/20/2026
+Earnings Rate Hours This Period Year To Date
+Regular 24.50 80.00 1,960.00 39,200.00
+Overtime 36.75 4.00 147.00 2,205.00
+Tips 212.40 4,036.20
+Gross Pay $2,319.40 45,441.20
+Statutory Deductions
+Federal Income Tax -231.94 4,544.12
+Social Security Tax -143.80 2,817.35
+Medicare Tax -33.63 658.90
+CA State Income Tax -92.78 1,817.65
+Voluntary Deductions
+401(k) -115.97 2,272.06
+Medical -86.50 1,730.00
+Net Pay $1,614.78 31,601.12

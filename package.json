@@ -1,0 +1,87 @@
+{
+  "name": "stubparse",
+  "version": "1.0.0",
+  "description": "Paystubs in. Spreadsheets out. Open-source paystub parser with in-browser extraction, Claude AI, and arithmetic validation.",
+  "license": "MIT",
+  "homepage": "https://stubparse.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vitaliqu/stubparse.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Vitaliqu/stubparse/issues"
+  },
+  "keywords": [
+    "paystub",
+    "pay-stub",
+    "parser",
+    "ocr",
+    "pdf",
+    "excel",
+    "nextjs",
+    "claude",
+    "stripe",
+    "firebase"
+  ],
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run tests",
+    "test:watch": "vitest tests",
+    "bench": "vitest run bench --reporter=verbose",
+    "typecheck": "tsc --noEmit",
+    "deploy:rules": "node scripts/deploy-rules.mjs",
+    "test:e2e": "playwright test",
+    "seo:audit": "node scripts/seo-audit.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.4.0",
+    "@sentry/nextjs": "^11.10.0",
+    "@upstash/ratelimit": "^2.2.0",
+    "@upstash/redis": "^1.41.0",
+    "exceljs": "^4.4.0",
+    "firebase": "^13.2.0",
+    "firebase-admin": "^14.5.0",
+    "lucide-react": "^1.67.0",
+    "next": "^16.4.5",
+    "pdfjs-dist": "^4.10.38",
+    "posthog-js": "^1.445.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "resend": "^6.37.0",
+    "stripe": "^23.1.0",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^16.4.5",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "^1.14.7"
+    },
+    "@sentry/bundler-plugins": {
+      "glob": "^14.0.3"
+    },
+    "exceljs": {
+      "uuid": "^11.1.1"
+    },
+    "gaxios": {
+      "rimraf": "^6.1.4"
+    },
+    "google-gax": {
+      "rimraf": "^6.1.4"
+    }
+  }
+}

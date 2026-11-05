@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedInAs(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function account(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function hasPaidPlan(uid) {
+      let a = account(uid);
+      return (a.get('subscription', null) != null && a.subscription.get('status', '') in ['active', 'trialing', 'past_due'])
+        || (a.get('team', null) != null && a.team.get('tier', 'free') == 'business');
+    }
+
+    function isTeamMember(teamId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
+    }
+
+    function teamIsActive(teamId) {
+      return get(/databases/$(database)/documents/teams/$(teamId)).data.get('tier', 'free') == 'business';
+    }
+
+    // Shape of a saved stub (extracted data only; never the file).
+    function validSavedDoc() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['fileName', 'fileType', 'mode', 'label', 'data', 'fileSignals', 'createdAt', 'updatedAt', 'expiresAt', 'createdBy', 'createdByEmail'])
+        && d.fileName is string && d.fileName.size() <= 300
+        && d.label is string && d.label.size() <= 120
+        && d.data is map
+        && (!('expiresAt' in d) || d.expiresAt == null || d.expiresAt is timestamp);
+    }
+
+    function validUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['data', 'label', 'updatedAt'])
+        && request.resource.data.label is string && request.resource.data.label.size() <= 120
+        && request.resource.data.data is map;
+    }
+
+    // Account document: plan, usage, billing, team. Written only by the server (Admin SDK bypasses rules).
+    match /users/{uid} {
+      allow read: if signedInAs(uid);
+      allow write: if false;
+
+      // Personal saved history. Saving needs a paid plan; reading and deleting never do.
+      match /documents/{docId} {
+        allow read, delete: if signedInAs(uid);
+        allow create: if signedInAs(uid) && hasPaidPlan(uid) && validSavedDoc();
+        allow update: if signedInAs(uid) && validUpdate();
+      }
+
+      // Client-side preferences (history saving, retention).
+      match /settings/{settingId} {
+        allow read, write: if signedInAs(uid);
+      }
+    }
+
+    // Business teams. Membership and invites are managed by the server.
+    match /teams/{teamId} {
+      allow read: if isTeamMember(teamId);
+      allow write: if false;
+
+      match /members/{memberId} {
+        allow read: if isTeamMember(teamId);
+        allow write: if false;
+      }
+
+      // Shared team history. Any member can read, add, edit, and delete while the team is on Business.
+      match /documents/{docId} {
+        allow read, delete: if isTeamMember(teamId);
+        allow create: if isTeamMember(teamId) && teamIsActive(teamId) && validSavedDoc()
+          && request.resource.data.createdBy == request.auth.uid;
+        allow update: if isTeamMember(teamId) && validUpdate();
+      }
+
+      match /invites/{inviteId} {
+        allow read, write: if false;
+      }
+    }
+
+    // Everything else (API keys, webhook dedupe, admin and error logs) is server-only.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

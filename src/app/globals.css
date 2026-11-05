@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+/* ── Tokens ─────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-paper:    #ffffff;
+  --color-canvas:   #f5f5f7;
+  --color-ink:      #0b0b0c;
+  --color-ink-2:    #1d1d1f;
+  --color-muted:    #6e6e73;  /* 4.9:1 on white */
+  --color-faint:    #86868b;  /* large text / decorative only */
+  --color-line:     #e5e5ea;
+  --color-line-2:   #d2d2d7;
+
+  --color-mark:      #ffe24a; /* highlighter — "extracted" */
+  --color-mark-soft: #fff4b8;
+  --color-ok:        #0a7d4f;
+  --color-ok-soft:   #e6f4ee;
+  --color-warn:      #a15c00;
+  --color-warn-soft: #fdf1e0;
+  --color-bad:       #c4211b;
+  --color-bad-soft:  #fdecea;
+
+  --radius-card: 14px;
+  --shadow-float: 0 1px 2px rgb(11 11 12 / 0.04), 0 12px 32px -8px rgb(11 11 12 / 0.14);
+  --shadow-pop:   0 2px 4px rgb(11 11 12 / 0.06), 0 16px 40px -12px rgb(11 11 12 / 0.22);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────────── */
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* Browser surfaces carry the design too */
+::selection { background: var(--color-mark); color: var(--color-ink); }
+:root { caret-color: var(--color-ink); accent-color: var(--color-ink); }
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+a { text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+
+* { scrollbar-width: thin; scrollbar-color: var(--color-line-2) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--color-line-2); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.tnum { font-variant-numeric: tabular-nums slashed-zero; font-feature-settings: "tnum", "zero"; }
+
+/* Highlighter: the one signature hue, meaning "extracted" */
+.mark {
+  background-image: linear-gradient(transparent 12%, var(--color-mark) 12%, var(--color-mark) 88%, transparent 88%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Stage highlight sweep (landing demo) */
+.sweep {
+  background-image: linear-gradient(transparent 10%, var(--color-mark) 10%, var(--color-mark) 90%, transparent 90%);
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  transition: background-size 520ms var(--ease-out-expo);
+  border-radius: 2px;
+}
+.sweep[data-on="true"] { background-size: 100% 100%; }
+
+/* A lifted value wipes into its cell as the stub highlight finishes */
+.cell-land { clip-path: inset(0 0 0 0); transition: clip-path 560ms var(--ease-out-expo) 160ms, opacity 240ms ease 160ms, background-color 1100ms ease; }
+.cell-land[data-on="false"] { clip-path: inset(0 100% 0 0); opacity: 0; transition-delay: 0ms; }
+.cell-land[data-fresh="true"] { background-color: var(--color-mark-soft); }
+
+/* Workspace: intake, then the rail, then results on mobile; rail spans the right column on desktop */
+.ws-grid { grid-template-areas: "intake" "rail" "results"; }
+@media (min-width: 1024px) {
+  .ws-grid { grid-template-areas: "intake rail" "results rail"; grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

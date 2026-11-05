@@ -1,0 +1,14 @@
+{
+  "name": "Jordan Reyes",
+  "payPeriodStart": "2026-09-16",
+  "payPeriodEnd": "2026-09-30",
+  "checkDate": "2026-10-03",
+  "grossPay": "2958.33",
+  "netPay": "2287.08",
+  "fields": {
+    "Federal Income Tax": "312.40",
+    "Social Security": "183.42",
+    "Medicare": "42.90",
+    "Dental": "14.20"
+  }
+}

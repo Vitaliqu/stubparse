@@ -2,21 +2,17 @@
 .env
 .env.*
 !.env.example
-
-# ── Python ────────────────────────────────────────────────────────────────────
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-*.pyo
-*.egg-info/
-dist/
-build/
+*-firebase-adminsdk-*.json
+*service-account*.json
+*.pem
+*.p8
+*.key
 
 # ── Node / Next.js ────────────────────────────────────────────────────────────
 node_modules/
 .next/
 out/
+*.tsbuildinfo
 
 # ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
@@ -32,9 +28,15 @@ Thumbs.db
 eng.traineddata
 /export/
 
-# ── Resume ────────────────────────────────────────────────────────────────────
-resume/
+# ── Local tooling ─────────────────────────────────────────────────────────────
+.impeccable/
+.claude/
+CLAUDE.md
 
-# ── Erroneous backend Node files ──────────────────────────────────────────────
-backend/package.json
-backend/package-lock.json
+# Real paystubs for the accuracy benchmark (never commit)
+bench/fixtures/private/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/

@@ -1,0 +1,49 @@
+name: Bug report
+description: Something doesn't work, or a paystub is read incorrectly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never attach a real paystub.** Describe the layout, or share a synthetic or fully anonymized version.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Parsing (Basic mode)
+        - Parsing (AI mode)
+        - Math checks or integrity signals
+        - Export (XLSX / CSV / JSON)
+        - Sign-in or account
+        - Billing
+        - Teams
+        - REST API
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: provider
+    attributes:
+      label: Payroll provider or layout
+      placeholder: e.g. ADP two-column, Gusto, scanned photo
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the workspace
+        2. Choose AI mode and drop a PDF
+        3. ...
+  - type: input
+    id: env
+    attributes:
+      label: Browser and OS
+      placeholder: e.g. Chrome 131 on macOS 15
