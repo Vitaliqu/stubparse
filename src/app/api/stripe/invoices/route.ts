@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { errorResponse, getOrCreateAccount, requireUser } from "@/lib/server/account";
+import { errorResponse, getOrCreateAccount, requireUser, usableCustomerId } from "@/lib/server/account";
 import { stripe } from "@/lib/server/stripe";
 
 export const runtime = "nodejs";
@@ -9,9 +9,10 @@ export async function GET(req: Request) {
   try {
     const user = await requireUser(req);
     const account = await getOrCreateAccount(user);
-    if (!account.stripeCustomerId) return NextResponse.json({ invoices: [] });
+    const customerId = await usableCustomerId(user.uid, account.stripeCustomerId);
+    if (!customerId) return NextResponse.json({ invoices: [] });
 
-    const list = await stripe().invoices.list({ customer: account.stripeCustomerId, limit: 12 });
+    const list = await stripe().invoices.list({ customer: customerId, limit: 12 });
     const invoices = list.data
       .filter((inv) => inv.status !== "draft")
       .map((inv) => ({

@@ -167,6 +167,23 @@ export async function setStripeCustomer(uid: string, customerId: string) {
   await usersCol().doc(uid).set({ stripeCustomerId: customerId }, { merge: true });
 }
 
+/**
+ * The stored Stripe customer, if it still exists in the current Stripe account.
+ * A customer from another mode or account (e.g. a sandbox ID after going live) or one deleted
+ * in the Dashboard is unlinked, so callers fall back to creating or finding a fresh one.
+ */
+export async function usableCustomerId(uid: string, customerId: string | null | undefined): Promise<string | null> {
+  if (!customerId) return null;
+  try {
+    const customer = await stripe().customers.retrieve(customerId);
+    if (!customer.deleted) return customerId;
+  } catch (err) {
+    if ((err as { code?: string }).code !== "resource_missing") throw err;
+  }
+  await usersCol().doc(uid).set({ stripeCustomerId: null, subscription: null }, { merge: true });
+  return null;
+}
+
 export async function findUidByCustomer(customerId: string): Promise<string | null> {
   const snap = await usersCol().where("stripeCustomerId", "==", customerId).limit(1).get();
   if (!snap.empty) return snap.docs[0].id;

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { errorResponse, getOrCreateAccount, requireUser, setStripeCustomer, syncCustomer } from "@/lib/server/account";
+import { errorResponse, getOrCreateAccount, requireUser, usableCustomerId, setStripeCustomer, syncCustomer } from "@/lib/server/account";
 import { stripe } from "@/lib/server/stripe";
 import { summarize } from "@/lib/plan";
 
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     const user = await requireUser(req);
     const account = await getOrCreateAccount(user);
 
-    let customerId = account.stripeCustomerId ?? null;
+    let customerId = await usableCustomerId(user.uid, account.stripeCustomerId);
     if (!customerId) {
       // Checkout created the customer with metadata.uid; recover the link if it was never stored.
       const found = await stripe().customers.search({ query: `metadata['uid']:'${user.uid}'`, limit: 1 });

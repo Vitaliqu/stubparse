@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { errorResponse, getOrCreateAccount, HttpError, requireUser, setStripeCustomer } from "@/lib/server/account";
+import { errorResponse, getOrCreateAccount, HttpError, requireUser, usableCustomerId, setStripeCustomer } from "@/lib/server/account";
 import { appOrigin, priceFor, stripe } from "@/lib/server/stripe";
 import { tierOf, type Interval, type PaidTier } from "@/lib/plan";
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       throw new HttpError(409, "You already have a subscription. Change plans from Manage billing.", "already_subscribed");
     }
 
-    let customerId = account.stripeCustomerId ?? null;
+    let customerId = await usableCustomerId(user.uid, account.stripeCustomerId);
     if (!customerId) {
       const customer = await stripe().customers.create({ email: user.email ?? undefined, metadata: { uid: user.uid } });
       customerId = customer.id;
