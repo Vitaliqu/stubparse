@@ -40,3 +40,4 @@ bench/fixtures/private/
 /test-results/
 /playwright-report/
 /blob-report/
+.vercel
